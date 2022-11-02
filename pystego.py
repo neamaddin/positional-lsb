@@ -135,9 +135,9 @@ class PositionalLSBVideo(PositionalLSB):
     def _can_encode(self, payload_path: str) -> bool:
         height = self.video.get(cv2.CAP_PROP_FRAME_HEIGHT)
         width = self.video.get(cv2.CAP_PROP_FRAME_WIDTH)
-        fps = self.video.get(cv2.CAP_PROP_FPS)
         frame_count = self.video.get(cv2.CAP_PROP_FRAME_COUNT)
-        payload_max_size = (height * width * BITS_IN_PIXEL / BITS_IN_BYTE) * fps
+        bytes_in_frame = height * width * BITS_IN_PIXEL / BITS_IN_BYTE
+        payload_max_size = bytes_in_frame * frame_count
         if (os.path.getsize(payload_path) + HASH_LENGTH) < payload_max_size:
             return True
         return False
