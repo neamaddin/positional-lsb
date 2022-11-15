@@ -205,12 +205,12 @@ class PositionalLSBVideo(PositionalLSB):
         self.video.release()
 
 
-if __name__ == '__main__':
-    lsb_encode = PositionalLSBImage('img.jpg', 'Passw0rd')
-    lsb_encode.encode_with_aes('requirements.txt', 'new.png')
+# if __name__ == '__main__':
+#     lsb_encode = PositionalLSBImage('img.jpg', 'Passw0rd')
+#     lsb_encode.encode_with_aes('requirements.txt', 'new.png')
 
-    lsb_decode = PositionalLSBImage('new.png', 'Passw0rd')
-    lsb_decode.decode_with_aes('1.txt')
+#     lsb_decode = PositionalLSBImage('new.png', 'Passw0rd')
+#     lsb_decode.decode_with_aes('1.txt')
 
 # if __name__ == '__main__':
 #     lsb_encode = PositionalLSBVideo('video.mp4', 'Passw0rd')
