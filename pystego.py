@@ -18,8 +18,11 @@ BITS_IN_PIXEL = 3
 
 class SubpixelLayuot(Enum):
     BGR = [0, 1, 2]
+    BRG = [0, 2, 1]
     GRB = [1, 2, 0]
+    GBR = [1, 0, 2]
     RGB = [2, 1, 0]
+    RBG = [2, 1, 0]
 
 
 class PositionalLSB():
@@ -29,12 +32,19 @@ class PositionalLSB():
         self._output_data: bytearray = bytearray(b'')
 
     def _subpixel_layuot(self) -> SubpixelLayuot:
-        layout_index = int.from_bytes(self.sha3_hash.digest(), 'big') % 3
-        if layout_index == 0:
-            return SubpixelLayuot.BGR
-        if layout_index == 1:
-            return SubpixelLayuot.GRB
-        return SubpixelLayuot.RGB
+        match int.from_bytes(self.sha3_hash.digest(), 'big') % 6:
+            case 0:
+                return SubpixelLayuot.BGR
+            case 1:
+                return SubpixelLayuot.BRG
+            case 2:
+                return SubpixelLayuot.GRB
+            case 3:
+                return SubpixelLayuot.GBR
+            case 4:
+                return SubpixelLayuot.RGB
+            case 5:
+                return SubpixelLayuot.RBG
 
     def _data_generator(self, data: bytes) -> Generator[str, None, None]:
         for byte in data:
@@ -195,12 +205,12 @@ class PositionalLSBVideo(PositionalLSB):
         self.video.release()
 
 
-# if __name__ == '__main__':
-#     lsb_encode = PositionalLSBImage('img.jpg', 'Passw0rd')
-#     lsb_encode.encode_with_aes('requirements.txt', 'new.png')
+if __name__ == '__main__':
+    lsb_encode = PositionalLSBImage('img.jpg', 'Passw0rd')
+    lsb_encode.encode_with_aes('requirements.txt', 'new.png')
 
-#     lsb_decode = PositionalLSBImage('new.png', 'Passw0rd')
-#     lsb_decode.decode_with_aes('1.txt')
+    lsb_decode = PositionalLSBImage('new.png', 'Passw0rd')
+    lsb_decode.decode_with_aes('1.txt')
 
 # if __name__ == '__main__':
 #     lsb_encode = PositionalLSBVideo('video.mp4', 'Passw0rd')
