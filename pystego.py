@@ -5,6 +5,7 @@ from enum import Enum
 import os
 
 from aes_cipher import DataEncrypter, DataDecrypter
+from Crypto.Cipher import DES3
 from numpy import ndarray
 import cv2
 
@@ -87,48 +88,60 @@ class PositionalLSBImage(PositionalLSB):
         self.pattern: CoordinatesList = self.pattern_data.get_pattern()
         super().__init__(self.pattern, self.sha3_hash)
 
-    def _can_encode(self, payload_path: str) -> bool:
+    def _can_encode(self, data: bytes) -> bool:
         payload_max_size = (self.pattern_data.image_height * \
             self.pattern_data.image_width * BITS_IN_PIXEL ) / BITS_IN_BYTE
-        if (os.path.getsize(payload_path) + HASH_LENGTH) < payload_max_size:
+        if (len(data) + HASH_LENGTH) < payload_max_size:
             return True
         return False
 
-    def encode(self, payload_path: str, container_file_path: str) -> None:
-        if self._can_encode(payload_path):
-            with open(payload_path, 'rb') as file:
-                data = file.read() + self.sha3_hash.digest()
-            self._encode_image(self.image, self._data_generator(data))
+    def encode(self, data: bytes, container_file_path: str) -> None:
+        if self._can_encode(data):
+            payload = data + self.sha3_hash.digest()
+            self._encode_image(self.image, self._data_generator(payload))
             cv2.imwrite(container_file_path, self.image)
         else:
             print('Can`t encode')
 
-    def encode_with_aes(self, payload_path: str,
-                        container_file_path: str) -> None:
-        if self._can_encode(payload_path):
-            with open(payload_path, 'rb') as file:
-                aes_encrypt = DataEncrypter()
-                aes_encrypt.Encrypt(file.read(), [self.password])
-                data = aes_encrypt.GetEncryptedData() + self.sha3_hash.digest()
-            self._encode_image(self.image, self._data_generator(data))
+    def encode_with_aes(self, data: bytes, container_file_path: str) -> None:
+        aes_encrypt = DataEncrypter()
+        aes_encrypt.Encrypt(data, [self.password])
+        if self._can_encode(aes_encrypt.GetEncryptedData()):    
+            payload = aes_encrypt.GetEncryptedData() + self.sha3_hash.digest()
+            self._encode_image(self.image, self._data_generator(payload))
             cv2.imwrite(container_file_path, self.image)
         else:
             print('Can`t encode')
 
-    def decode(self, output_file_path: str) -> None:
-        with open(output_file_path, 'wb') as file:
-            self._decode_image(self.image)
-            file.write(self._output_data[:-HASH_LENGTH])
+    def encode_with_3des(self, data: bytes, container_file_path: str) -> None:
+        key = DES3.adjust_key_parity(sha3_256(self.password).digest()[:24]) 
+        cipher = DES3.new(key, DES3.MODE_CFB)
+        encrypted_data = cipher.iv + cipher.encrypt(data)
+        if self._can_encode(encrypted_data):
+            payload = encrypted_data + self.sha3_hash.digest()
+            self._encode_image(self.image, self._data_generator(payload))
+            cv2.imwrite(container_file_path, self.image)
+        else:
+            print('Can`t encode')
 
-    def decode_with_aes(self, output_file_path: str) -> None:
-        with open(output_file_path, 'wb') as file:
-            self._decode_image(self.image)
-            aes_decrypt = DataDecrypter()
-            aes_decrypt.Decrypt(
-                self._output_data[:-HASH_LENGTH],
-                [self.password]
-            )
-            file.write(aes_decrypt.GetDecryptedData())
+    def decode(self) -> bytes:
+        self._decode_image(self.image)
+        return self._output_data[:-HASH_LENGTH]
+
+    def decode_with_aes(self) -> bytes:
+        self._decode_image(self.image)
+        aes_decrypt = DataDecrypter()
+        aes_decrypt.Decrypt(
+            self._output_data[:-HASH_LENGTH],
+            [self.password]
+        )
+        return aes_decrypt.GetDecryptedData()
+
+    def decode_with_3des(self) -> bytes:
+        key = DES3.adjust_key_parity(sha3_256(self.password).digest()[:24])
+        self._decode_image(self.image)
+        cipher = DES3.new(key, DES3.MODE_CFB)
+        return cipher.decrypt(self._output_data[:-HASH_LENGTH],)[8:]
 
 
 class PositionalLSBVideo(PositionalLSB):
@@ -207,10 +220,12 @@ class PositionalLSBVideo(PositionalLSB):
 
 # if __name__ == '__main__':
 #     lsb_encode = PositionalLSBImage('img.jpg', 'Passw0rd')
-#     lsb_encode.encode_with_aes('requirements.txt', 'new.png')
+#     with open('requirements.txt', 'rb') as file:
+#         lsb_encode.encode_with_3des(file.read(), 'new.png')
 
 #     lsb_decode = PositionalLSBImage('new.png', 'Passw0rd')
-#     lsb_decode.decode_with_aes('1.txt')
+#     with open('1.txt', 'wb') as file:
+#         file.write(lsb_decode.decode_with_3des())
 
 # if __name__ == '__main__':
 #     lsb_encode = PositionalLSBVideo('video.mp4', 'Passw0rd')

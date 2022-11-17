@@ -67,3 +67,9 @@ class VideoPattern(Pattern):
         video_height = int(video.get(cv2.CAP_PROP_FRAME_HEIGHT))
         video.release()
         super().__init__(video_width, video_height, sha3_hash)
+
+
+if __name__ == '__main__':
+    pattern = Pattern(10, 10, sha3_256(b''))
+    print(pattern._create_and_mix_sequence())
+    print(pattern.get_pattern())
