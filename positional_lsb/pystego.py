@@ -9,7 +9,7 @@ from Crypto.Cipher import DES3
 from numpy import ndarray
 import cv2
 
-from pattern import CoordinatesList, ImagePattern, VideoPattern
+from positional_lsb.pattern import CoordinatesList, ImagePattern, VideoPattern
 
 
 BITS_IN_BYTE = 8

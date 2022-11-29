@@ -51,7 +51,7 @@ class Client:
         while True:
             text = input('Введите текст: ')
             encrypted_text = cipher.encrypt(text.encode('utf-8'))
-            self.reliable_send({'text': encrypted_text.hex(),})
+            self.reliable_send({'data': encrypted_text.hex(),})
 
 sender = Client('192.168.1.2', 4444)
 sender.run()

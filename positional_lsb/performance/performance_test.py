@@ -1,11 +1,9 @@
 from dataclasses import dataclass
 from hashlib import sha3_256
 import time
-import sys
-sys.path.append('../')
 
-from pattern import Pattern
-from pystego import PositionalLSBImage
+from positional_lsb.pattern import Pattern
+from positional_lsb.pystego import PositionalLSBImage
 
 
 @dataclass

@@ -1,5 +1,3 @@
-from base64 import b64decode
-from hashlib import md5
 import logging
 import socket
 import json
@@ -7,6 +5,8 @@ import sys
 
 from Crypto.PublicKey import RSA
 from Crypto.Cipher import PKCS1_OAEP, AES
+
+from positional_lsb.pystego import PositionalLSBImage
 
 
 logging.basicConfig(level=logging.INFO, filename='server.log', filemode='a',
@@ -57,17 +57,15 @@ class Server:
             ciphered_key = bytes.fromhex(self.relaible_recieve()['aes_key'])
             cipher = PKCS1_OAEP.new(self.private_key)
             aes_key = cipher.decrypt(ciphered_key)
-            print(aes_key)
             self.aes_cipher = AES.new(aes_key, AES.MODE_CFB)
-            logging.info('[+] Ключ AES был успешно получен %s', aes_key)
+            logging.info('[+] Ключ AES был успешно получен %s', aes_key.hex())
             self.reliable_send('200: OK')
             self.aes_cipher.decrypt(
                 bytes.fromhex(self.relaible_recieve()['init'])
             )
         while True:
             response_data = self.relaible_recieve()
-            print(self.aes_cipher.decrypt(
-                    bytes.fromhex(response_data['text'])))
+            print(self.aes_cipher.decrypt(bytes.fromhex(response_data['data'])))
 
 
 if __name__ == '__main__':
@@ -76,9 +74,6 @@ if __name__ == '__main__':
         reciever.run()
     except KeyboardInterrupt:
         reciever.connection.close()
+        logging.info('[-] Сокет был успешно закрыт')
     except Exception as err:
         logging.exception(err)
-
-# key = RSA.importKey(open('private.pem').read())
-# cipher = PKCS1_OAEP.new(key)
-# message = cipher.decrypt(ciphertext)
