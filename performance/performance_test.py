@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from hashlib import sha3_256
 import time
 import sys
@@ -5,6 +6,12 @@ sys.path.append('../')
 
 from pattern import Pattern
 from pystego import PositionalLSBImage
+
+
+@dataclass
+class Resolution:
+    width: int
+    height: int
 
 
 def lead_time_for_pattern(pattern: Pattern) -> float:
@@ -16,31 +23,30 @@ def lead_time_for_pattern(pattern: Pattern) -> float:
 def lead_time_by_data_volume(lsb_encode:PositionalLSBImage,
                              filename: str) -> float:
     start = time.time()
-    lsb_encode.encode(filename, 'new.png')
+    with open(filename, 'rb') as file:
+        lsb_encode.encode(file.read(), 'new.png')
     end = time.time()
     return end - start
 
 
 image_resolutions = {
-    'HD': (1280, 720),
-    'FullHD': (1920, 1080),
-    'QaudHD': (2560, 1440),
-    'UltraHD': (3840, 2160)
+    'HD': Resolution(1280, 720),
+    'FullHD': Resolution(1920, 1080),
+    'QaudHD': Resolution(2560, 1440),
+    'UltraHD': Resolution(3840, 2160)
 }
 
 default_hash = sha3_256(b'')
 
-for resolution in image_resolutions:
+for resolution_name, resolution in image_resolutions.items():
     execution_time = lead_time_for_pattern(
-        Pattern(image_resolutions[resolution][0],
-                image_resolutions[resolution][1],
-                default_hash)
+        Pattern(resolution.width, resolution.height, default_hash)
         )
-    print(resolution, execution_time)
+    print(resolution_name, execution_time)
 
 files = [ 'quarter_fill', 'half_fill', 'three_fourths_fill', 'full_filling']
 
-lsb_encode = PositionalLSBImage('img.jpg', 'Passw0rd')
-for file in files:
-    execution_time = lead_time_by_data_volume(lsb_encode, file)
-    print(file, execution_time)
+lsb_encode_object = PositionalLSBImage('img.jpg', 'Passw0rd')
+for file_path in files:
+    execution_time = lead_time_by_data_volume(lsb_encode_object, file_path)
+    print(file_path, execution_time)
