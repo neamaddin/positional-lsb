@@ -1,4 +1,3 @@
-from hashlib import sha3_256
 from typing import NamedTuple, List, Callable
 from math import ceil
 
@@ -14,10 +13,10 @@ CoordinatesList = List[Coordinates]
 
 class Pattern():
     def __init__(self, image_width: int, image_height: int,
-                 sha3_hash: sha3_256) -> None:
+                 sha3_hash: bytes) -> None:
         self.image_width: int = image_width
         self.image_height: int = image_height
-        self.hash_int: int = int.from_bytes(sha3_hash.digest(), 'big')
+        self.hash_int: int = int.from_bytes(sha3_hash, 'big')
         self.pattern: CoordinatesList = []
 
     def _create_and_mix_sequence(self) -> list[int]:
@@ -53,7 +52,7 @@ class Pattern():
 
 
 class ImagePattern(Pattern):
-    def __init__(self, image_path: str, sha3_hash: sha3_256) -> None:
+    def __init__(self, image_path: str, sha3_hash: bytes) -> None:
         image = cv2.imread(image_path)
         image_width: int = len(image[0])
         image_height: int = len(image)
@@ -61,15 +60,9 @@ class ImagePattern(Pattern):
 
 
 class VideoPattern(Pattern):
-    def __init__(self, video_path: str, sha3_hash: sha3_256) -> None:
+    def __init__(self, video_path: str, sha3_hash: bytes) -> None:
         video = cv2.VideoCapture(video_path)
         video_width = int(video.get(cv2.CAP_PROP_FRAME_WIDTH))
         video_height = int(video.get(cv2.CAP_PROP_FRAME_HEIGHT))
         video.release()
         super().__init__(video_width, video_height, sha3_hash)
-
-
-if __name__ == '__main__':
-    pattern = Pattern(10, 10, sha3_256(b''))
-    print(pattern._create_and_mix_sequence())
-    print(pattern.get_pattern())
