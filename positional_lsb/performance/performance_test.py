@@ -34,11 +34,11 @@ image_resolutions = {
     'UltraHD': Resolution(3840, 2160)
 }
 
-default_hash = sha3_256(b'')
+DEFAULT_HASH = sha3_256(b'').digest()
 
 for resolution_name, resolution in image_resolutions.items():
     execution_time = lead_time_for_pattern(
-        Pattern(resolution.width, resolution.height, default_hash)
+        Pattern(resolution.width, resolution.height, DEFAULT_HASH)
         )
     print(resolution_name, execution_time)
 
