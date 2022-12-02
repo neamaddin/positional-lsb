@@ -6,7 +6,6 @@ import sys
 from Crypto.PublicKey import RSA
 from Crypto.Cipher import PKCS1_OAEP
 
-from positional_lsb.pystego import PositionalLSBImage
 from positional_lsb.aes import AEScipher
 
 
@@ -74,14 +73,12 @@ class Server:
             response_data_raw = self._relaible_recieve()
             response_data = self.aes_cipher.decrypt(
                                             bytes.fromhex(response_data_raw))
-            print(response_data)
             if response_data == b'Get image':
                 self._reliable_send(self.aes_cipher.encrypt(b'200: OK').hex())
             else:
                 self._reliable_send('400: Bad Request')
         else:
             self._reliable_send('400: Bad Request')
-            print('Here!')
 
 
 if __name__ == '__main__':

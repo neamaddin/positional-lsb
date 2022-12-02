@@ -3,7 +3,7 @@ from hashlib import sha3_256
 import time
 
 from positional_lsb.pattern import Pattern
-from positional_lsb.pystego import PositionalLSBImage
+from positional_lsb.stego import PositionalLSBImage
 
 
 @dataclass

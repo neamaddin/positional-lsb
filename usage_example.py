@@ -1,4 +1,4 @@
-from positional_lsb.pystego import PositionalLSBImage
+from positional_lsb.stego import PositionalLSBImage
 
 if __name__ == '__main__':
     lsb_encode = PositionalLSBImage('img.jpg', 'Passw0rd')

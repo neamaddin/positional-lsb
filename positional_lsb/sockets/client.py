@@ -2,7 +2,7 @@ import socket
 import json
 
 from Crypto.PublicKey import RSA
-from Crypto.Cipher import PKCS1_OAEP, AES
+from Crypto.Cipher import PKCS1_OAEP
 from Crypto.Random import get_random_bytes
 
 from positional_lsb.aes import AEScipher
