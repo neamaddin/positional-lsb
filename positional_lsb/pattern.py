@@ -12,8 +12,7 @@ CoordinatesList = List[Coordinates]
 
 
 class Pattern():
-    def __init__(self, image_width: int, image_height: int,
-                 sha3_hash: bytes) -> None:
+    def __init__(self, image_width: int, image_height: int, sha3_hash: bytes):
         self.image_width: int = image_width
         self.image_height: int = image_height
         self.hash_int: int = int.from_bytes(sha3_hash, 'big')
@@ -52,7 +51,7 @@ class Pattern():
 
 
 class ImagePattern(Pattern):
-    def __init__(self, image_path: str, sha3_hash: bytes) -> None:
+    def __init__(self, image_path: str, sha3_hash: bytes):
         image = cv2.imread(image_path)
         image_width: int = len(image[0])
         image_height: int = len(image)
@@ -60,7 +59,7 @@ class ImagePattern(Pattern):
 
 
 class VideoPattern(Pattern):
-    def __init__(self, video_path: str, sha3_hash: bytes) -> None:
+    def __init__(self, video_path: str, sha3_hash: bytes):
         video = cv2.VideoCapture(video_path)
         video_width = int(video.get(cv2.CAP_PROP_FRAME_WIDTH))
         video_height = int(video.get(cv2.CAP_PROP_FRAME_HEIGHT))

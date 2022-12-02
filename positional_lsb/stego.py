@@ -26,7 +26,7 @@ class SubpixelLayuot(Enum):
 
 
 class PositionalLSB():
-    def __init__(self, pattern: CoordinatesList, sha3_hash: bytes) -> None:
+    def __init__(self, pattern: CoordinatesList, sha3_hash: bytes):
         self.sha3_hash = sha3_hash
         self.pattern: CoordinatesList = pattern
         self._output_data: bytearray = bytearray(b'')
@@ -79,7 +79,7 @@ class PositionalLSB():
 
 
 class PositionalLSBImage(PositionalLSB):
-    def __init__(self, container_path: str, password: str = '') -> None:
+    def __init__(self, container_path: str, password: str = ''):
         self.image: ndarray = cv2.imread(container_path)
         self.password: bytes = password.encode('utf-8')
         self.sha3_hash: bytes = sha3_256(self.password).digest()
@@ -140,7 +140,7 @@ class PositionalLSBImage(PositionalLSB):
 
 
 class PositionalLSBVideo(PositionalLSB):
-    def __init__(self, container_path: str, password: str) -> None:
+    def __init__(self, container_path: str, password: str):
         self.container_path = container_path
         self.video = cv2.VideoCapture(container_path)
         self.current_frame: ndarray
