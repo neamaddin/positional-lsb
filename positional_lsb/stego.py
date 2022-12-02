@@ -11,6 +11,7 @@ import cv2
 from positional_lsb.pattern import CoordinatesList, ImagePattern, VideoPattern
 from positional_lsb.aes import AEScipher
 
+
 BITS_IN_BYTE = 8
 HASH_LENGTH = 32
 BITS_IN_PIXEL = 3
