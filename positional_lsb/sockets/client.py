@@ -1,12 +1,22 @@
+import logging
 import pickle
 import socket
+import sys
 
 from Crypto.PublicKey import RSA
 from Crypto.Cipher import PKCS1_OAEP
 from Crypto.Random import get_random_bytes
 
-from positional_lsb.sockets.sock import SecureSocket
+from positional_lsb.sockets.sock import SecureSocket, Status
 from positional_lsb.ciphers import AEScipher
+
+
+logging.basicConfig(level=logging.INFO, filename='client.log', filemode='a',
+                    format='%(asctime)s %(levelname)s %(message)s')
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+logger.addHandler(logging.StreamHandler(sys.stdout))
+
 
 
 class Client(SecureSocket):
@@ -19,11 +29,11 @@ class Client(SecureSocket):
 
     def _aes_key_ship_status(self):
         status = self._recv()
-        if status == b'200: OK':
-            print('[+] Ключ AES был успешно доставлен')
+        if status == Status.OK.value:
+            logger.info('[+] Ключ AES был успешно доставлен')
             self.set_aes_cipher(AEScipher(self.aes_key))
         else:
-            print('[-] Что-то пошло не так')
+            logger.info('[-] Что-то пошло не так')
             self._connection.close()
 
     def establish_secure_connection(self) -> None:
@@ -33,7 +43,7 @@ class Client(SecureSocket):
         if raw_rsa_key is not None:
             n_value, e_value = pickle.loads(raw_rsa_key)
             public_key = RSA.construct((n_value, e_value))
-            print(f'[+] Публичный ключ был успешно получен: {public_key}')
+            logger.info('[+] Публичный ключ был успешно получен: %s', public_key)
             cipher = PKCS1_OAEP.new(public_key)
             ciphered_key = cipher.encrypt(self.aes_key)
             self._send(pickle.dumps({'aes_key': ciphered_key}))
@@ -47,14 +57,14 @@ class Client(SecureSocket):
                 data = pickle.loads(response_data)
                 with open(data['filename'], 'wb') as image:
                     image.write(data['image'])
-                self._send(b'200: OK')
-                print('[+] Изображение было успешно получено')
+                self._send(Status.OK.value)
+                logger.info('[+] Изображение было успешно получено')
         else:
-            print('[-] Не удалось утановить защищенное соединение')
+            logger.info('[-] Не удалось уcтановить защищенное соединение')
 
     def close_socket(self) -> None:
         self._connection.close()
-        print('[-] Сокет был успешно закрыт')
+        logger.info('[-] Сокет был успешно закрыт')
 
 
 if __name__ == '__main__':

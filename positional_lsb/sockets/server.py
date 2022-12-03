@@ -7,7 +7,7 @@ import sys
 from Crypto.PublicKey import RSA
 from Crypto.Cipher import PKCS1_OAEP
 
-from positional_lsb.sockets.sock import SecureSocket
+from positional_lsb.sockets.sock import SecureSocket, Status
 from positional_lsb.ciphers import AEScipher
 
 
@@ -26,18 +26,18 @@ class Server(SecureSocket):
         listener.listen(0)
         self.private_key = RSA.generate(3072)
         self.public_key = self.private_key.public_key()
-        logging.info('[+] Ключи были успешно сгенирированны: %s, %s',
+        logger.info('[+] Ключи были успешно сгенирированны: %s, %s',
                      self.public_key, self.private_key)
-        logging.info('[+] Ожидание входяших подключений')
+        logger.info('[+] Ожидание входяших подключений')
         self._connection, address = listener.accept()
-        logging.info('[+] Установлено соединение с клиентом %s', address)
+        logger.info('[+] Установлено соединение с клиентом %s', address)
         super().__init__(self._connection)
 
     def _send_rsa_pubkey(self) -> None:
-        logging.info('[+] Запрошен публичный ключ (RSA)')
+        logger.info('[+] Запрошен публичный ключ (RSA)')
         pubkey = pickle.dumps([self.public_key.n, self.public_key.e])
         self._send(pubkey)
-        logging.info('[+] Публичный ключ RSA был успешно отправлен')
+        logger.info('[+] Публичный ключ RSA был успешно отправлен')
 
     def establish_secure_connection(self) -> None:
         request = self._recv()
@@ -48,29 +48,29 @@ class Server(SecureSocket):
                 ciphered_key = pickle.loads(aes_key_msg)['aes_key']
                 cipher = PKCS1_OAEP.new(self.private_key)
                 aes_key = cipher.decrypt(ciphered_key)
-                logging.info('[+] Ключ AES был успешно получен %s', aes_key.hex())
-                self._send(b'200: OK')
+                logger.info('[+] Ключ AES был успешно получен %s', aes_key.hex())
+                self._send(Status.OK.value)
                 self.set_aes_cipher(AEScipher(aes_key))
         else:
-            self._send(b'400: Bad Request')
+            self._send(Status.BAD_REQUEST.value)
 
     def send_image(self, image_path: str) -> None:
         if self._connection_is_secure and self._recv() == b'Get image':
-            logging.info('[+] Было запрошено изображение')
+            logger.info('[+] Было запрошено изображение')
             with open(image_path, 'rb') as image:
                 data = {
                     'filename': basename(image_path),
                     'image': image.read()
                     }
                 self._send(pickle.dumps(data))
-            if self._recv() == b'Get image':
-                logging.info('[+] Изображение было успешно получено')
+            if self._recv() == Status.OK.value:
+                logger.info('[+] Изображение было успешно получено')
         else:
-            self._send(b'400: Bad Request')
+            self._send(Status.BAD_REQUEST.value)
 
     def close_socket(self) -> None:
         self._connection.close()
-        logging.info('[-] Сокет был успешно закрыт')
+        logger.info('[-] Сокет был успешно закрыт')
 
 
 if __name__ == '__main__':
@@ -81,4 +81,4 @@ if __name__ == '__main__':
     except KeyboardInterrupt:
         reciever.close_socket()
     except Exception as err:
-        logging.exception(err)
+        logger.exception(err)

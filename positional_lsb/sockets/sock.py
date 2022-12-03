@@ -1,7 +1,13 @@
 from socket import socket
+from enum import Enum
 import struct
 
-from positional_lsb.aes import AEScipher
+from positional_lsb.ciphers import AEScipher
+
+
+class Status(Enum):
+    OK = b'200: OK'
+    BAD_REQUEST = b'400: Bad Request'
 
 
 class SecureSocket:
