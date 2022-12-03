@@ -1,5 +1,4 @@
 from typing import NamedTuple, List, Callable
-from math import ceil
 
 import cv2
 
@@ -28,12 +27,12 @@ class Pattern():
         return sequence
 
     def _index_to_coordinates_vertical(self, index: int) -> Coordinates:
-        x = ceil(index / self.image_height) - 1
+        x = index // self.image_height - 1
         y = index % self.image_height - 1
         return Coordinates(x, y)
 
     def _index_to_coordinates_horizontal(self, index: int) -> Coordinates:
-        y = ceil(index / self.image_width) - 1
+        y = index // self.image_width - 1
         x = index % self.image_width - 1
         return Coordinates(x, y)
 
