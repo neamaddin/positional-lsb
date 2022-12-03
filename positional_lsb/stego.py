@@ -1,20 +1,18 @@
-from subprocess import Popen
 from hashlib import sha3_256
+import struct
 from typing import Generator
 from enum import Enum
-import os
 
-from Crypto.Cipher import DES3
 from numpy import ndarray
 import cv2
 
-from positional_lsb.pattern import CoordinatesList, ImagePattern, VideoPattern
-from positional_lsb.aes import AEScipher
+from positional_lsb.pattern import CoordinatesList, ImagePattern
+from positional_lsb.ciphers import AEScipher, DES3cipher
 
 
 BITS_IN_BYTE = 8
-HASH_LENGTH = 32
 BITS_IN_PIXEL = 3
+DATA_LEN_PREFIX = 4
 
 
 class SubpixelLayuot(Enum):
@@ -54,29 +52,38 @@ class PositionalLSB():
 
     def _encode_image(self, image: ndarray,
                       data_generator: Generator[str, None, None]) -> None:
-        for coordinates in self.pattern:
+        for coords in self.pattern:
             for key in self._subpixel_layuot().value:
                 try:
                     if next(data_generator) == '1':
-                        image[coordinates.y][coordinates.x][key] |= 0b00000001
+                        image[coords.y][coords.x][key] |= 0b00000001
                     else:
-                        image[coordinates.y][coordinates.x][key] &= 0b11111110
+                        image[coords.y][coords.x][key] &= 0b11111110
                 except StopIteration:
                     return
 
-    def _decode_image(self, image: ndarray) -> bool:
+    def _extract_byte(self, image: ndarray) -> Generator[int, None, None]:
         byte = ''
-        for coordinates in self.pattern:
+        for coords in self.pattern:
             for key in self._subpixel_layuot().value:
                 if len(byte) < BITS_IN_BYTE:
-                    byte += str(bin(image[coordinates.y][coordinates.x][key])[-1])
+                    byte += str(bin(image[coords.y][coords.x][key])[-1])
                 else:
-                    byte_int = int(byte, 2)
-                    self._output_data.append(byte_int)
-                    if self._output_data[-HASH_LENGTH:] == self.sha3_hash:
-                        return True
-                    byte = str(bin(image[coordinates.y][coordinates.x][key])[-1])
-        return False
+                    yield int(byte, 2)
+                    byte = str(bin(image[coords.y][coords.x][key])[-1])
+
+    def _decode_image(self, image: ndarray) -> bool:
+        byte_from_image = self._extract_byte(image)
+        raw_data_len = bytearray(b'')
+        for _ in range(DATA_LEN_PREFIX):
+            raw_data_len.append(next(byte_from_image))
+        data_len = struct.unpack('>I', raw_data_len)[0]
+        try:
+            for _ in range(data_len):
+                self._output_data.append(next(byte_from_image))
+            return True
+        except StopIteration:
+            return False
 
 
 class PositionalLSBImage(PositionalLSB):
@@ -91,13 +98,13 @@ class PositionalLSBImage(PositionalLSB):
     def _can_encode(self, data: bytes) -> bool:
         payload_max_size = (self.pattern_data.image_height * \
             self.pattern_data.image_width * BITS_IN_PIXEL ) / BITS_IN_BYTE
-        if (len(data) + HASH_LENGTH) < payload_max_size:
+        if (DATA_LEN_PREFIX + len(data)) < payload_max_size:
             return True
         return False
 
     def encode(self, data: bytes, container_file_path: str) -> None:
         if self._can_encode(data):
-            payload = data + self.sha3_hash
+            payload = struct.pack('>I', len(data)) + data
             self._encode_image(self.image, self._data_generator(payload))
             cv2.imwrite(container_file_path, self.image)
         else:
@@ -105,110 +112,22 @@ class PositionalLSBImage(PositionalLSB):
 
     def encode_with_aes(self, data: bytes, container_file_path: str) -> None:
         aes_cipher = AEScipher(self.sha3_hash[:16], self.sha3_hash[16:])
-        encrypted_data = aes_cipher.encrypt(data)
-        if self._can_encode(encrypted_data):
-            payload = encrypted_data + self.sha3_hash
-            self._encode_image(self.image, self._data_generator(payload))
-            cv2.imwrite(container_file_path, self.image)
-        else:
-            print('Can`t encode')
+        self.encode(aes_cipher.encrypt(data), container_file_path)
 
     def encode_with_3des(self, data: bytes, container_file_path: str) -> None:
-        key = DES3.adjust_key_parity(self.sha3_hash[:24])
-        cipher = DES3.new(key, DES3.MODE_CFB)
-        encrypted_data = cipher.iv + cipher.encrypt(data)
-        if self._can_encode(encrypted_data):
-            payload = encrypted_data + self.sha3_hash
-            self._encode_image(self.image, self._data_generator(payload))
-            cv2.imwrite(container_file_path, self.image)
-        else:
-            print('Can`t encode')
+        cipher = DES3cipher(self.sha3_hash)
+        self.encode(cipher.encrypt(data), container_file_path)
 
     def decode(self) -> bytes:
         self._decode_image(self.image)
-        return self._output_data[:-HASH_LENGTH]
+        return self._output_data
 
     def decode_with_aes(self) -> bytes:
         aes_cipher = AEScipher(self.sha3_hash[:16], self.sha3_hash[16:])
         self._decode_image(self.image)
-        return aes_cipher.decrypt(self._output_data[:-HASH_LENGTH])
+        return aes_cipher.decrypt(self._output_data)
 
     def decode_with_3des(self) -> bytes:
-        key = DES3.adjust_key_parity(self.sha3_hash[:24])
+        cipher = DES3cipher(self.sha3_hash)
         self._decode_image(self.image)
-        cipher = DES3.new(key, DES3.MODE_CFB)
-        return cipher.decrypt(self._output_data[:-HASH_LENGTH],)[8:]
-
-
-class PositionalLSBVideo(PositionalLSB):
-    def __init__(self, container_path: str, password: str):
-        self.container_path = container_path
-        self.video = cv2.VideoCapture(container_path)
-        self.current_frame: ndarray
-        self.password: bytes = password.encode('utf-8')
-        self.sha3_hash = sha3_256(self.password)
-        self.pattern_data = VideoPattern(container_path, self.sha3_hash)
-        self.pattern: CoordinatesList = self.pattern_data.get_pattern()
-        super().__init__(self.pattern, self.sha3_hash)
-
-    def _can_encode(self, payload_path: str) -> bool:
-        height = self.video.get(cv2.CAP_PROP_FRAME_HEIGHT)
-        width = self.video.get(cv2.CAP_PROP_FRAME_WIDTH)
-        frame_count = self.video.get(cv2.CAP_PROP_FRAME_COUNT)
-        bytes_in_frame = height * width * BITS_IN_PIXEL / BITS_IN_BYTE
-        payload_max_size = bytes_in_frame * frame_count
-        if (os.path.getsize(payload_path) + HASH_LENGTH) < payload_max_size:
-            return True
-        return False
-
-    def _separate_audio(self) -> None:
-        Popen(['ffmpeg',
-            '-i', self.container_path,
-            '-q:a', '0', '-map', 'a', 'audio.mp3']).wait()
-
-    def _render_video(self, container_file_path: str) -> None:
-        Popen(['ffmpeg',
-            '-r' , str(int(self.video.get(cv2.CAP_PROP_FPS))),
-            '-i', 'frames\\%08d.png',
-            '-i', 'audio.mp3',
-            '-vcodec', 'rawvideo',
-            '-pix_fmt', 'rgb32',
-            '-acodec', 'copy',
-            container_file_path + '.avi']).wait()
-
-    def encode(self, payload_path: str, container_file_path: str) -> None:
-        if self._can_encode(payload_path):
-            with open(payload_path, 'rb') as file:
-                data = file.read() + self.sha3_hash
-            data_generator = self._data_generator(data)
-            if os.path.exists('frames'):
-                os.remove('frames')
-                os.mkdir('frames')
-            else:
-                os.mkdir('frames')
-            frame_index = 1
-            while self.video.isOpened():
-                ret, frame = self.video.read()
-                if ret:
-                    self.current_frame = frame
-                    self._encode_image(self.current_frame, data_generator)
-                    cv2.imwrite('frames/{:08d}.png'.format(frame_index),
-                                self.current_frame)
-                    frame_index += 1
-                else:
-                    break
-            self._separate_audio()
-            self._render_video(container_file_path)
-            self.video.release()
-        else:
-            print('Can`t encode')
-
-    def decode(self, output_file_path: str) -> None:
-        with open(output_file_path, 'wb') as file:
-            while self.video.isOpened():
-                ret, frame = self.video.read()
-                if ret:
-                    if self._decode_image(frame):
-                        break
-            file.write(self._output_data[:-HASH_LENGTH])
-        self.video.release()
+        return cipher.decrypt(self._output_data)

@@ -6,7 +6,7 @@ from Crypto.Cipher import PKCS1_OAEP
 from Crypto.Random import get_random_bytes
 
 from positional_lsb.sockets.sock import SecureSocket
-from positional_lsb.aes import AEScipher
+from positional_lsb.ciphers import AEScipher
 
 
 class Client(SecureSocket):

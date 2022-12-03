@@ -8,7 +8,7 @@ from Crypto.PublicKey import RSA
 from Crypto.Cipher import PKCS1_OAEP
 
 from positional_lsb.sockets.sock import SecureSocket
-from positional_lsb.aes import AEScipher
+from positional_lsb.ciphers import AEScipher
 
 
 logging.basicConfig(level=logging.INFO, filename='server.log', filemode='a',
