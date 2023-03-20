@@ -7,22 +7,25 @@ class Coordinates(NamedTuple):
     x: int
     y: int
 
+
 CoordinatesList = List[Coordinates]
 
 
-class Pattern():
+class Pattern:
     def __init__(self, image_width: int, image_height: int, sha3_hash: bytes):
         self.image_width: int = image_width
         self.image_height: int = image_height
-        self.hash_int: int = int.from_bytes(sha3_hash, 'big')
+        self.hash_int: int = int.from_bytes(sha3_hash, "big")
         self.pattern: CoordinatesList = []
 
     def _create_and_mix_sequence(self) -> list[int]:
         sequence = list(range(1, self.image_width * self.image_height + 1))
         index = len(sequence) - 1
         while index > 0:
-            sequence[self.hash_int % index], sequence[index] = \
-                sequence[index], sequence[self.hash_int % index]
+            sequence[self.hash_int % index], sequence[index] = (
+                sequence[index],
+                sequence[self.hash_int % index],
+            )
             index -= 1
         return sequence
 
@@ -55,12 +58,3 @@ class ImagePattern(Pattern):
         image_width: int = len(image[0])
         image_height: int = len(image)
         super().__init__(image_width, image_height, sha3_hash)
-
-
-class VideoPattern(Pattern):
-    def __init__(self, video_path: str, sha3_hash: bytes):
-        video = cv2.VideoCapture(video_path)
-        video_width = int(video.get(cv2.CAP_PROP_FRAME_WIDTH))
-        video_height = int(video.get(cv2.CAP_PROP_FRAME_HEIGHT))
-        video.release()
-        super().__init__(video_width, video_height, sha3_hash)

@@ -3,3 +3,4 @@ Name: positional-lsb
 Version: 0.0.0
 Author: Neamaddin Akhmedov
 Requires-Python: >=3.10
+License-File: LICENSE
