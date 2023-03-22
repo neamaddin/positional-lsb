@@ -1,4 +1,0 @@
-﻿future==0.18.2
-numpy==1.23.3
-opencv-python==4.6.0.66
-pycryptodome==3.15.0
