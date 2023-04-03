@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="500" height="500">
+  <defs>
+    <style>
+      .square {
+        stroke: #000;
+        stroke-width: 4px;
+      }
+      .white-circle {
+        fill: none;
+        stroke: #fff;
+        stroke-width: 10px;
+      }
+      .bg-white {
+        fill: white;
+      }
+      .bg-red {
+        fill: red;
+      }
+      .bg-green {
+        fill: lime;
+      }
+      .bg-blue {
+        fill: blue;
+      }
+    </style>
+  </defs>
+  <path d="M45.3,45H67.812V397.693l45.027-21.827L56.555,485,0.27,375.866,45.3,397.693V45Z"/>
+  <path d="M45,67.808v-22.6H397.693L375.866,0,485,56.508l-109.134,56.5,21.827-45.2H45Z"/>
+  <rect class="square bg-white" x="120" y="312" width="100" height="100"/>
+  <rect class="square bg-white" x="216" y="312" width="100" height="100"/>
+  <rect class="square bg-blue" x="312" y="312" width="100" height="100"/>
+  <path d="M148.5,384a7.5,7.5,0,1,1-7.5,7.5A7.5,7.5,0,0,1,148.5,384Zm21,0a7.5,7.5,0,1,1-7.5,7.5A7.5,7.5,0,0,1,169.5,384Zm21,0a7.5,7.5,0,1,1-7.5,7.5A7.5,7.5,0,0,1,190.5,384Z"/>
+  <path class="cls-1" d="M258.084,330h15.01v64h-15.01V330Z"/>
+  <circle class="white-circle" cx="362" cy="364" r="32"/>
+  <rect class="square bg-white" x="120" y="216" width="100" height="100"/>
+  <rect class="square bg-white" x="216" y="216" width="100" height="100"/>
+  <rect class="square bg-green" x="312" y="216" width="100" height="100"/>
+  <path d="M148.5,288a7.5,7.5,0,1,1-7.5,7.5A7.5,7.5,0,0,1,148.5,288Zm21,0a7.5,7.5,0,1,1-7.5,7.5A7.5,7.5,0,0,1,169.5,288Zm21,0a7.5,7.5,0,1,1-7.5,7.5A7.5,7.5,0,0,1,190.5,288Z"/>
+  <path class="cls-1" d="M258.084,234h15.01v64h-15.01V234Z"/>
+  <circle class="white-circle" cx="362" cy="268" r="32"/>
+  <rect class="square bg-white" x="120" y="120" width="100" height="100"/>
+  <rect class="square bg-white" x="216" y="120" width="100" height="100"/>
+  <rect class="square bg-red" x="312" y="120" width="100" height="100"/>
+  <path d="M258.084,138h15.01v64h-15.01V138Z"/>
+  <path d="M148.5,192a7.5,7.5,0,1,1-7.5,7.5A7.5,7.5,0,0,1,148.5,192Zm21,0a7.5,7.5,0,1,1-7.5,7.5A7.5,7.5,0,0,1,169.5,192Zm21,0a7.5,7.5,0,1,1-7.5,7.5A7.5,7.5,0,0,1,190.5,192Z"/>
+  <circle class="white-circle" cx="362" cy="170" r="32"/>
+</svg>

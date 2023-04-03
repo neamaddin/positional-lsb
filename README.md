@@ -1,3 +1,6 @@
+![logo](static/logo.svg)
+
+
 # Positional LSB
 
 [![tests](https://github.com/neamaddin/positional-lsb/actions/workflows/tests.yml/badge.svg)](https://github.com/neamaddin/positional-lsb/actions/workflows/tests.yml)
